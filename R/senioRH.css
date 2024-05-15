@@ -1,0 +1,27 @@
+.navbar-logo.pull-left {
+  padding-top:8px;
+}
+
+.navbar{
+  font-size: smaller;
+}
+
+.storyboard-nav .sbframelist {
+    margin: 0 auto;
+    width: 94%;
+    height: 65px;
+    overflow: hidden;
+    text-shadow: none;
+    margin-bottom: 8px;
+}
+
+.storyboard-nav .sbnext, .storyboard-nav .sbprev {
+    float: left;
+    width: 2%;
+    height: 65px;
+    font-size: 50px;
+}
+
+.leaflet-container {
+    background: #f2f2f2;
+}

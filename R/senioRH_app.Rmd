@@ -1,0 +1,252 @@
+---
+title: "SenioRH"
+output: 
+  flexdashboard::flex_dashboard:
+    css: "senioRH.css"
+    theme:
+      bg: "#E6FF94"
+      fg: "#006769" 
+      primary: "#006769"
+      base_font:
+        google: Prompt
+      code_font:
+        google: JetBrains Mono
+    vertical_layout: scroll
+logo: "favicon-32x32.png"
+---
+  
+```{r setup, echo=FALSE}
+library(flexdashboard)
+knitr::opts_chunk$set(echo = FALSE)
+library(tidyverse)
+library(knitr)
+library(data.table)
+library(plotly)
+library(lubridate)
+library(leaflet)
+library(htmltools)
+library(htmlwidgets)
+library(crosstalk)
+library(openxlsx)
+library(DT)
+```
+
+Etablissements d'hébergement pour personnes âgées
+=====================================
+```{r get_effectifs,message=FALSE, warning=FALSE, include=FALSE, paged.print=FALSE}
+
+df_stock_ehpad = read.csv(file = "../true_data/donnees_brutes_stock_ehpad.csv")
+flux_entree = read.csv(file = "../true_data/donnees_brutes_flux_entree_ehpad.csv")
+flux_sortie = read.csv(file = "../true_data/donnees_brutes_flux_sortie_ehpad.csv")
+motifs <- fread(file = '../Nomenclatures/motif_rupture', sep = '-', colClasses = c('character','character'))
+                
+class_pcs2003 <- read.csv("../Nomenclatures/classification_pcs.csv",sep=";") %>%
+                 mutate(pcs_ese = stringr::str_to_upper(pcs2003)) %>%
+                 select(pcs_ese,groupe_det)
+
+# Stock
+
+
+df_nature_contrat <- data_frame("nature_contrat"=c(1,2),"intitule_nature"=c("CDI","CDD"))
+
+df_stock_ehpad_int <- left_join(df_stock_ehpad,df_nature_contrat,by=c("nature_contrat")) %>% mutate(intitule_nature = case_when(intitule_nature %in% c("CDD","CDI") ~ intitule_nature, TRUE ~ "Autre")) %>%
+  mutate(pcs_ese = stringr::str_to_upper(pcs_ese))
+
+df_stock_ehpad_fin <- left_join(df_stock_ehpad_int,class_pcs2003,by=c("pcs_ese")) %>% mutate(groupe_det = case_when(is.na(groupe_det) ~ "Autre", TRUE ~ groupe_det)) 
+
+table_effectif_mensuel <- df_stock_ehpad_fin %>%
+              group_by(id_etab,date) %>%
+              summarise(effectif_m = sum(contrats))
+
+table_effectif_mensuel_pcs <- df_stock_ehpad_fin %>%
+              group_by(id_etab,date,groupe_det) %>%
+              summarise(effectif_m = sum(contrats))
+
+table_effectif_mensuel_typecontrat <- df_stock_ehpad_fin %>%
+              group_by(id_etab,date,intitule_nature) %>%
+              summarise(effectif_m = sum(contrats))
+
+
+# Flux
+
+table_entree_mensuelle <- flux_entree %>%
+              group_by(id_etab,mois) %>%
+              summarise(effectif_e = n())
+
+table_sortie_mensuelle <- flux_sortie %>%
+              group_by(id_etab,mois) %>%
+              summarise(effectif_s = -n())
+
+TES_mensuelle <- merge(table_entree_mensuelle, table_sortie_mensuelle, by = c("id_etab", "mois")) %>%
+  mutate(
+    solde = effectif_e + effectif_s
+  )
+
+
+
+table_entree_mensuelle_nature_contrat <- flux_entree %>%
+              group_by(id_etab,mois,type_contrat) %>%
+              summarise(effectif_e = n())
+
+table_sortie_mensuelle_motif <- flux_sortie %>%
+              group_by(id_etab,mois, motif_sortie) %>%
+              summarise(effectif_s = n())
+
+
+# Flux focus
+
+flux_entree <- flux_entree %>%
+  mutate(pcs_ese = stringr::str_to_upper(pcs))
+
+flux_sortie <- flux_sortie %>%
+  mutate(pcs_ese = stringr::str_to_upper(pcs))
+
+flux_entree_focus <- merge(flux_entree, class_pcs2003, by = "pcs_ese")
+flux_sortie_focus <- merge(flux_sortie, class_pcs2003, by = "pcs_ese")                   
+
+
+table_entree_mensuelle_focus <- flux_entree_focus %>%
+              group_by(id_etab,mois) %>%
+              summarise(effectif_e = n())
+
+table_sortie_mensuelle_focus <- flux_sortie_focus %>%
+              group_by(id_etab,mois) %>%
+              summarise(effectif_s = -n())
+
+TES_mensuelle_focus <- merge(table_entree_mensuelle_focus, table_sortie_mensuelle_focus, by = c("id_etab", "mois")) %>%
+  mutate(
+    solde = effectif_e + effectif_s
+  )
+
+
+```
+
+```{r creation_SharedData}
+eff_tot_mensuel_filtre <- SharedData$new(table_effectif_mensuel, ~id_etab, group = "filtre_ehpad")
+
+eff_tot_mensuel_pcs_filtre <- SharedData$new(table_effectif_mensuel_pcs, ~id_etab, group = "filtre_ehpad")
+
+eff_tot_mensuel_type_contrat_filtre <- SharedData$new(table_effectif_mensuel_typecontrat, ~id_etab, group = "filtre_ehpad")
+
+TES_mensuelle_filtre <- SharedData$new(TES_mensuelle, ~id_etab, group = "filtre_ehpad")
+
+TES_mensuelle_focus_filtre <- SharedData$new(TES_mensuelle_focus, ~id_etab, group = "filtre_ehpad")
+
+entrees_mensuelles_nature_contrat_filtre <- SharedData$new(table_entree_mensuelle_nature_contrat, ~id_etab, group = "filtre_ehpad")
+
+sorties_mensuelles_motif_sortie_filtre <- SharedData$new(table_sortie_mensuelle_motif, ~id_etab, group = "filtre_ehpad")
+```
+
+#### Choix de l'établissement
+```{r} 
+filter_select(id = "ehpad_filtre",
+              label = "Etablissement",
+              sharedData = eff_tot_mensuel_filtre, 
+              group =  ~id_etab,
+              multiple = F)
+
+```
+
+----
+
+### <b>Effectif au cours des 6 derniers mois</b> 
+
+```{r}
+plot_ly(eff_tot_mensuel_filtre,x = ~date) %>% 
+  add_lines(y = ~ effectif_m) %>% 
+ add_text(
+    text = ~scales::comma(effectif_m), y = ~(effectif_m), 
+    textposition = "top middle", 
+    cliponaxis = FALSE
+  ) %>%
+  config(locale = 'fr') %>%
+  layout(showlegend = FALSE,
+         yaxis = list(title= "Nombre de contrats recensés", 
+                      autorange=T, 
+                      fixedrange= F),
+         xaxis = list(title= "Six derniers mois", 
+                      autorange=T, 
+                      fixedrange= F))
+```
+
+
+### <b>Répartition des effectif au cours des 6 derniers mois : par type de PCS / par nature de contrat </b> 
+
+```{r}
+bscols(widths = c(6,6),
+  plot_ly(eff_tot_mensuel_pcs_filtre,x = ~date,y = ~effectif_m,color=~groupe_det, type = 'bar') %>% 
+  config(locale = 'fr') %>%
+  layout(showlegend = TRUE,
+         barmode = "stack",
+         autosize = T,
+         yaxis = list(title= "Nombre de contrats recensés", 
+                      autorange=T, 
+                      fixedrange= F)),
+  
+ plot_ly(eff_tot_mensuel_type_contrat_filtre,x = ~date,y = ~effectif_m,color=~intitule_nature,type = 'bar') %>% 
+  config(locale = 'fr') %>%
+  layout(showlegend = TRUE,
+         barmode="stack",
+         yaxis = list(title= "Nombre de contrats recensés", 
+                      autorange=T, 
+                      fixedrange= F))
+)
+
+```
+
+----
+
+
+### <b>Variation des effectifs au cours des 6 derniers mois</b> 
+
+```{r}
+fig <- plot_ly(TES_mensuelle_filtre, x = ~mois, y = ~effectif_e, type = 'bar', name = 'Entrées')
+fig <- fig %>% add_trace(y = ~effectif_s, name = 'Sorties')
+fig <- fig %>% add_lines(y = ~solde, name = 'Solde')
+fig <- fig %>% layout(yaxis = list(title = 'Entrées, sorties et solde'), 
+                      barmode = 'overlay',
+                      title = "Nouveaux contrats, fins de contrats et solde par mois")
+
+
+fig
+
+```
+
+
+### <b>Variation des effectifs au cours des 6 derniers mois, FOCUS métiers de la santé et du social </b> 
+
+```{r}
+fig <- plot_ly(TES_mensuelle_focus_filtre, x = ~mois, y = ~effectif_e, type = 'bar', name = 'Entrées')
+fig <- fig %>% add_trace(y = ~effectif_s, name = 'Sorties')
+fig <- fig %>% add_lines(y = ~solde, name = 'Solde')
+fig <- fig %>% layout(yaxis = list(title = 'Entrées, sorties et solde'), 
+                      barmode = 'overlay',
+                      title = "Nouveaux contrats, fins de contrats et solde par mois, Focus métiers santé et social")
+
+
+fig
+
+```
+
+----
+
+### <b>Evolution des fins de contrat par motif de sortie </b> 
+
+```{r}
+source("../R/01_code_tableau_evol_motifs_sortie.R")
+tab_motif_2 <-  tab_motif[,.(`Motif de rupture` = V2, `Sur les 6
+derniers mois`=round(N/6,1), evol=evol, `Le dernier mois` = last_month, id_etab)]
+
+tab_filtre  <- SharedData$new(tab_motif_2, ~id_etab, group = "filtre_ehpad")
+
+DT::datatable(tab_filtre, options = list(columnDefs = list(list(visible = FALSE, targets = 3))),
+              caption = "Ruptures mensuelles de contrat dans l'établissement") %>%
+  formatStyle(
+    'Le dernier mois', valueColumns = 'evol', target = 'cell',
+    backgroundColor = styleInterval(c(0), c('lightgreen', '#D2042D')),
+    color = styleInterval(c(0), c('black', 'white')))
+
+
+```
+
+----

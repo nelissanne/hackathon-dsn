@@ -1,0 +1,41 @@
+pcs2003;Libelle_pcs2003;groupe;groupe_det
+311a;M?decins lib?raux sp?cialistes;2M?decins;2M?decins
+311b;M?decins lib?raux g?n?ralistes;2M?decins;2M?decins
+311c;Chirurgiens dentistes;2M?decins;2M?decins
+311d;Psychologues, psychanalystes, psychoth?rapeutes (non M?decins);6Autres soignants;Psy
+311f;Pharmaciens lib?raux;2M?decins;2M?decins
+341a;Professeurs agr?g?s et certifi?s de l'enseignement secondaire;2M?decins;2M?decins
+342a;Enseignants de l'enseignement sup?rieur;2M?decins;2M?decins
+342b;Professeurs et ma?tres de conf?rences;2M?decins;2M?decins
+342c;Professeurs agr?g?s et certifi?s en fonction dans l'enseignement sup?rieur;2M?decins;2M?decins
+342d;Personnel enseignant temporaire de l'enseignement sup?rieur;2M?decins;2M?decins
+342e;Chercheurs de la recherche publique;2M?decins;2M?decins
+342f;Directeurs et charg?s de recherche de la recherche publique;2M?decins;2M?decins
+342g;Ing?nieurs d'?tude et de recherche de la recherche publique;2M?decins;2M?decins
+342h;Allocataires de la recherche publique;2M?decins;2M?decins
+344a;M?decins hospitaliers sans activit? lib?rale;2M?decins;2M?decins
+344b;M?decins salari?s non hospitaliers;2M?decins;2M?decins
+344c;Internes en m?decine, odontologie et pharmacie;1Internes;1Internes
+344d;Pharmaciens salari?s;2M?decins;2M?decins
+431a;Cadres Infirmiers et assimil?s;6Autres soignants;Cadres Infirmiers
+431b;Infirmiers psychiatriques;4Infirmiers;4Infirmiers
+431c;Pu?ricultrices;4Infirmiers;4Infirmiers
+431d;Infirmiers sp?cialis?s (autres qu'Infirmiers psychiatriques et pu?ricultrices);4Infirmiers;4Infirmiers
+431e;Sages-femmes salari?es;3Sages-femmes;3Sages-femmes
+431f;Infirmiers en soins g?n?raux, salari?s;4Infirmiers;4Infirmiers
+431g;Infirmiers lib?raux;4Infirmiers;4Infirmiers
+432a;Masseurs-kin?sith?rapeutes r??ducateurs, lib?raux;6Autres soignants;Reeduc
+432b;Masseurs-kin?sith?rapeutes r??ducateurs, salari?s;6Autres soignants;Reeduc
+432c;Autres sp?cialistes de la r??ducation, lib?raux;6Autres soignants;Reeduc
+432d;Autres sp?cialistes de la r??ducation, salari?s;6Autres soignants;Reeduc
+526a;Aides-soignants;5Aides-soignants;5Aides-soignants
+526c;Auxiliaires de pu?riculture;5Aides-soignants;5Aides-soignants
+526d;Aides m?dico-psychologiques;5Aides-soignants;5Aides-soignants
+563a;Assistantes maternelles, gardiennes d'enfants, familles d'accueil;6Autres soignants;Enfance
+434a;Cadres de l'intervention socio-?ducative;8Autres non soignants;Social
+434b;Assistants de service social;8Autres non soignants;Social
+434c;Conseillers en ?conomie sociale familiale;8Autres non soignants;Social
+434d;Educateurs sp?cialis?s;8Autres non soignants;Social
+434f;Educateurs techniques sp?cialis?s, moniteurs d'atelier;8Autres non soignants;Social
+434g;Educateurs de jeunes enfants;8Autres non soignants;Social
+435b;Animateurs socioculturels et de loisirs;8Autres non soignants;Social
